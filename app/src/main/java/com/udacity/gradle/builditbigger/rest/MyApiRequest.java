@@ -63,7 +63,7 @@ public class MyApiRequest extends AsyncTask<String, Void, String> {
             }
         } catch (Exception e) {
             Log.e(TAG,"Error on request MyApi",e);
-            return e.getMessage();
+            return null;
         }
         return null;
     }
@@ -72,6 +72,7 @@ public class MyApiRequest extends AsyncTask<String, Void, String> {
     protected void onPostExecute(String result) {
         mMyApiResponseHandler.onResponse(result);
     }
+
 
     public void setDelegate(MyApiResponseHandler delegate) {
         mMyApiResponseHandler = delegate;
