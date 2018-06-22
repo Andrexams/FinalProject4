@@ -1,6 +1,7 @@
 package com.udacity.gradle.builditbigger;
 
 import com.udacity.gradle.builditbigger.rest.MyApiRequest;
+import com.udacity.gradle.builditbigger.rest.MyApiParams;
 import com.udacity.gradle.builditbigger.utils.NetworkUtils;
 
 import android.content.Intent;
@@ -11,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -23,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private ProgressBar mProgressBar;
     private TextView mTextViewError;
     private RelativeLayout mFragment;
+    private Button mButtonTell;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,6 +34,17 @@ public class MainActivity extends AppCompatActivity {
         mProgressBar = (ProgressBar) findViewById(R.id.pb_loading_indicator);
         mTextViewError = (TextView) findViewById(R.id.tv_error_message_display);
         mFragment = (RelativeLayout) findViewById(R.id.fragment);
+        mButtonTell = (Button) findViewById(R.id.tell_joke_button);
+        addListeners();
+    }
+
+    private void addListeners() {
+        mButtonTell.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                tellJoke(view);
+            }
+        });
     }
 
     @Override
@@ -56,25 +70,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void tellJoke(View view) {
-        if (NetworkUtils.isConnectOnNetwork(this)) {
-            mProgressBar.setVisibility(View.VISIBLE);
+        try{
+            if (NetworkUtils.isConnectOnNetwork(this)) {
+                mProgressBar.setVisibility(View.VISIBLE);
 
-            final MyApiRequest request = new MyApiRequest(this);
-            request.setDelegate(new MyApiRequest.MyApiResponseHandler() {
-                @Override
-                public void onResponse(String result) {
-                    if (result != null) {
+                final MyApiRequest request = new MyApiRequest(this);
+                request.setDelegate(new MyApiRequest.MyApiCallback() {
+                    @Override
+                    public void onResponse(String result) {
                         showJokeActivity(result);
-                    } else {
+                        mProgressBar.setVisibility(View.INVISIBLE);
+                    }
+                    @Override
+                    public void onException(Exception e) {
+                        mProgressBar.setVisibility(View.INVISIBLE);
                         showErrorMessage(getString(R.string.error_msg));
                     }
-                    mProgressBar.setVisibility(View.INVISIBLE);
-                }
-            });
-            request.execute(MyApiRequest.apiMethods.doJoke.name());
+                });
+                MyApiParams myApiParams = new MyApiParams(MyApiParams.DO_JOKE,null);
+                request.execute(myApiParams);
 
-        } else {
-            showErrorMessage(getString(R.string.no_network_msg));
+            } else {
+                showErrorMessage(getString(R.string.no_network_msg));
+            }
+        }catch (Exception e){
+            mProgressBar.setVisibility(View.INVISIBLE);
+            showErrorMessage(getString(R.string.error_msg));
         }
     }
 
